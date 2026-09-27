@@ -1,0 +1,415 @@
+/* FOMES — prototipo v2, allineato a Liteshop. Sistema neutro in bianco e nero
+   (CLAUDE.md), solo Inter regular + bold. Eccezione dichiarata (Andrea, 26/09):
+   il riquadro del prodotto ha fondo #111111. I titoli giganti sono Inter
+   compresso in orizzontale (vedi .word). */
+
+@font-face { font-family: Inter; font-style: normal; font-weight: 400; font-display: swap;
+	src: url(../fonts/inter-latin-400-normal.woff2) format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: Inter; font-style: normal; font-weight: 700; font-display: swap;
+	src: url(../fonts/inter-latin-700-normal.woff2) format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: Inter; font-style: normal; font-weight: 400; font-display: swap;
+	src: url(../fonts/inter-latin-ext-400-normal.woff2) format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: Inter; font-style: normal; font-weight: 700; font-display: swap;
+	src: url(../fonts/inter-latin-ext-700-normal.woff2) format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* ---------- Token ---------- */
+:root {
+	--bg: #FFFFFF;
+	--fg: #111111;
+	--muted: #666666;
+	--line: #DDDDDD;
+	--pad: clamp(16px, 1.4vw, 24px);
+	--gap: clamp(12px, 1.4vw, 20px);
+	--ease: cubic-bezier(.7, 0, .2, 1);
+}
+[data-theme="dark"] {
+	--bg: #111111;
+	--fg: #FFFFFF;
+	--muted: rgba(255, 255, 255, .6);
+	--line: rgba(255, 255, 255, .2);
+	background: var(--bg); color: var(--fg);
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+	margin: 0; background: var(--bg); color: var(--fg);
+	font-family: Inter, Helvetica, Arial, sans-serif; font-weight: 400;
+	font-size: 15px; line-height: 1.35;
+	-webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+	overflow-x: clip;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+h1, h2, h3, p, ul, figure { margin: 0; font-size: inherit; font-weight: inherit; }
+ul { padding: 0; list-style: none; }
+img { max-width: 100%; display: block; }
+::selection { background: #111111; color: #FFFFFF; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); }
+
+/* etichette: il «mono» di Liteshop, fatto con Inter maiuscolo a cifre tabellari */
+.label {
+	font-size: 13px; line-height: 1.22; font-weight: 400;
+	text-transform: uppercase; letter-spacing: .01em;
+	font-feature-settings: "tnum" 1, "case" 1;
+}
+
+/* angoli a parentesi */
+.brackets { position: relative; padding: 8px 12px; display: inline-grid; place-items: center; }
+.brackets::before, .brackets::after {
+	content: ""; position: absolute; inset: 0; pointer-events: none;
+	background:
+		linear-gradient(currentColor, currentColor) left top / 8px 1px no-repeat,
+		linear-gradient(currentColor, currentColor) left top / 1px 8px no-repeat,
+		linear-gradient(currentColor, currentColor) right top / 8px 1px no-repeat,
+		linear-gradient(currentColor, currentColor) right top / 1px 8px no-repeat;
+}
+.brackets::after { transform: scaleY(-1); }
+
+/* parola gigante e stretta (SVG, Inter compresso) */
+.word { display: block; width: 100%; overflow: hidden; line-height: 0; }
+.word svg { display: block; width: 100%; height: auto; overflow: visible; }
+.word text { font-family: Inter, Helvetica, Arial, sans-serif; font-weight: 700; fill: currentColor; }
+.word.is-grey { color: #DDDDDD; }
+
+/* segnaposto di foto e video */
+.ph {
+	position: relative; aspect-ratio: var(--r, 4/5); width: 100%;
+	background: repeating-linear-gradient(135deg, transparent 0 11px, var(--line) 11px 12px);
+	outline: 1px solid var(--line); outline-offset: -1px;
+	display: grid; place-items: center; overflow: hidden;
+}
+.ph .label { background: var(--bg); padding: 6px 8px; color: var(--muted); font-size: 11px; }
+.ph.has-img { background: #EEEEEE; outline: 0; }
+.ph__img { position: absolute; left: 0; top: -20%; width: 100%; height: 140%; object-fit: cover; will-change: transform; }
+.gal .ph.has-img { cursor: zoom-in; }
+
+/* immagine della galleria ingrandita al clic */
+.lb { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(255, 255, 255, .96); opacity: 0; visibility: hidden; }
+.lb.is-open { visibility: visible; }
+.lb__img { max-width: calc(100vw - 2 * var(--pad)); max-height: calc(100svh - 120px); width: auto; height: auto; object-fit: contain; cursor: zoom-out; }
+.lb__close { position: absolute; top: var(--pad); right: var(--pad); }
+.shop .ph.has-img { background: none; }
+.shop .ph.has-img .ph__img { object-fit: contain; top: 0; height: 100%; }   /* shop: intero, senza parallasse (Andrea, 27/09: «risulta tagliato l'oggetto») */
+
+/* riquadro-rimando a un'altra pagina */
+.tile { display: block; }
+.tile__box {
+	position: relative; display: flex; flex-direction: column; justify-content: space-between;
+	aspect-ratio: var(--r, 4/5); max-height: calc(100svh - 180px); padding: 18px; background: #111111; color: #FFFFFF; overflow: hidden;   /* sta nello schermo (Andrea, 27/09: «ora viene tagliato in parte») */
+}
+.tile__title { font-weight: 700; font-size: clamp(32px, 3.6vw, 64px); letter-spacing: -.05em; line-height: .92; text-transform: uppercase; }
+.tile__arrow { position: absolute; right: 18px; bottom: 14px; font-size: clamp(32px, 3.6vw, 64px); line-height: 1; transition: transform .5s var(--ease); }
+.tile:hover .tile__arrow { transform: translateX(10px); }
+.tile > .label { display: block; margin-top: 10px; }
+
+/* sottolineatura che si disegna al passaggio, ed esce verso destra (Liteshop) */
+.u { position: relative; }
+.u::after {
+	content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: currentColor;
+	transform: scaleX(0); transform-origin: right center; transition: transform .45s var(--ease);
+}
+.u:hover::after { transform: scaleX(1); transform-origin: left center; }
+
+/* cursore alla Liteshop: il puntatore di sistema resta; sopra immagini e rimandi ([data-cursor])
+   un'etichetta segue il mouse con un leggero ritardo e si apre col suo testo. Colore a rotazione
+   per immagine, come i progetti di Liteshop: nero, bianco, lime (il lime sul puntatore, Andrea 27/09) */
+.cursor-label {
+	position: fixed; left: 0; top: 0; z-index: 200; pointer-events: none;
+	display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; opacity: 0;
+	padding: 6px 0; border-radius: 3px; background: var(--cl-bg); color: var(--cl-fg);
+	font-size: 12px; line-height: 1.2; text-transform: uppercase; letter-spacing: .01em; font-feature-settings: "tnum" 1;
+	transition: max-width .5s var(--ease), padding .5s var(--ease), opacity .2s, background-color .25s, color .25s;
+	--cl-bg: #111111; --cl-fg: #FFFFFF;
+}
+.cursor-label.is-on { max-width: 360px; padding: 6px 9px; opacity: 1; }
+.cursor-label[data-tone="lime"] { --cl-bg: #E5FF2D; --cl-fg: #111111; }
+.cursor-label[data-tone="light"] { --cl-bg: #FFFFFF; --cl-fg: #111111; box-shadow: inset 0 0 0 1px #111111; }
+
+/* ---------- Preloader ---------- */
+.preloader { display: none; }
+.js .preloader {
+	position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+	background: #FFFFFF; color: #111111;
+	transition: clip-path 1s var(--ease); clip-path: inset(0 0 0 0);
+	animation: preloader-sicura 0s 9s forwards;
+}
+.js .preloader.is-done { clip-path: inset(0 0 100% 0); }
+@keyframes preloader-sicura { to { visibility: hidden; } }
+
+/* ---------- Header (due righe come Liteshop: la seconda è nella hero) ---------- */
+.hdr {
+	position: fixed; inset: 0 0 auto; z-index: 50;
+	display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap);
+	align-items: center; padding: var(--pad) var(--pad) 0;
+	color: #FFFFFF; mix-blend-mode: difference; pointer-events: none;
+}
+.hdr a, .hdr button { pointer-events: auto; }
+.hdr__logo { grid-column: 1 / 4; font-weight: 700; font-size: 24px; letter-spacing: -.05em; line-height: 1; }
+.hdr__box { grid-column: 4 / 5; width: 48px; height: 48px; padding: 0; }
+.hdr__nav { grid-column: 7 / 11; }
+.hdr__nav a:hover, .hdr__cta:hover, .ftr a:hover { opacity: .55; }
+.hdr__cta { grid-column: 11 / 13; justify-self: end; padding: 16px 12px; }
+.hdr__menu { display: none; }
+
+.menu {
+	position: fixed; inset: 0; z-index: 49; display: flex; flex-direction: column; justify-content: center;
+	gap: 6px; padding: var(--pad); background: #FFFFFF; visibility: hidden; opacity: 0; transition: opacity .4s, visibility .4s;
+}
+.menu a { font-weight: 700; font-size: clamp(44px, 13vw, 96px); letter-spacing: -.06em; line-height: .9; text-transform: uppercase; }
+.menu-open .menu { visibility: visible; opacity: 1; }
+
+/* ---------- Intro: hero + riquadro che cresce + prodotto ---------- */
+.intro { position: relative; height: 1330vh; }   /* giro + esploso con le direttrici (regia in fomes.js, 11,8 unità) */
+.intro__sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.intro__meta { position: absolute; left: var(--pad); right: var(--pad); top: calc(var(--pad) + 98px); z-index: 3; }
+.m-clock { grid-column: 1 / 4; }
+.m-lang { grid-column: 4 / 7; }
+.m-b0 { grid-column: 7 / 9; }
+.m-b1 { grid-column: 9 / 11; }
+.m-b2 { grid-column: 11 / 13; }
+
+/* la parola occupa le colonne 5–12, in basso, come LITESHOP2© */
+.intro__word {
+	--col: calc((100% - 2 * var(--pad) - 11 * var(--gap)) / 12);
+	position: absolute; z-index: 2; bottom: var(--pad); right: var(--pad);
+	width: calc(var(--col) * 8 + var(--gap) * 7);
+}
+
+.frame {
+	position: absolute; z-index: 1; left: var(--pad); right: var(--pad); top: 0; bottom: 0;
+	overflow: hidden; transform-origin: left bottom; will-change: transform;
+}
+.reel, .seq__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.seq__canvas { opacity: 0; }
+.frame__ui { position: absolute; inset: 0; }
+.frame__tag { position: absolute; top: calc(var(--pad) + 98px); left: var(--pad); color: var(--muted); opacity: 0; }
+
+/* blocchi di testo e direttrici (posizioni calcolate da fomes.js sulle ancore dei pezzi) */
+.feat { position: absolute; left: 9%; top: 18%; width: min(40%, 620px); opacity: 0; }
+.feat--b[data-to=""] { left: 67%; width: 27%; }   /* solo testo, a destra: il prodotto nello slot arriva al 64% */
+.feat__n { display: block; color: var(--muted); margin-bottom: 42px; }
+.feat__title { font-weight: 400; font-size: clamp(40px, 5.2vw, 92px); letter-spacing: -.055em; line-height: .96; }
+.feat__text { font-size: 13px; font-weight: 700; line-height: 1.15; max-width: 32ch; margin-top: 22px; }
+.leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.leaders path { stroke: #949494; stroke-width: 1; fill: none; }   /* = bianco al 55% sul nero, ma pieno: i rami condividono il primo tratto */
+.leaders circle { fill: #FFFFFF; }
+
+/* ---------- Galleria («SELECTED PROJECTS 22-25©») ---------- */
+.gal { padding: 12vh var(--pad) 18vh; }
+.gal__head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); align-items: end; margin-top: 18px; }
+.gal__word { grid-column: 1 / 9; }
+.gal__count { grid-column: 11 / 13; }
+.gal__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); row-gap: 12vh; margin-top: 10vh; align-items: start; }
+.gal__item > .label { display: block; margin-top: 10px; }
+.g1 { grid-column: 1 / 5; }
+.g2 { grid-column: 7 / 13; margin-top: 14vh; }
+.g3 { grid-column: 3 / 9; }
+.g4 { grid-column: 10 / 13; margin-top: 20vh; }
+.g5 { grid-column: 1 / 4; }
+.g6 { grid-column: 6 / 11; margin-top: 8vh; }
+
+/* ---------- Film: striscia a tutta larghezza che si apre a tutta pagina (Andrea, 27/09) ---------- */
+/* la sezione tiene il riquadro fermo per 160vh di scorrimento; la regia in fomes.js apre il ritaglio */
+.film { position: relative; height: 260vh; }
+.film__sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.film__frame { position: absolute; inset: 0; clip-path: inset(36% 0% 36% 0%); }
+.film__video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.film__ph { aspect-ratio: auto; height: 100%; }
+
+/* ---------- Shop ---------- */
+.shop { padding: 14vh var(--pad) 16vh; border-top: 1px solid var(--line); }
+.shop__grid { margin-top: 6vh; align-items: end; row-gap: 48px; }
+.shop__media { grid-column: 1 / 7; }
+/* la sezione sta in una schermata (Andrea, 27/09: «la parte shop va un pò fuori pagina nella versione PC»): la
+   cornice 4:5 a mezza pagina superava lo schermo (1546 px su 1230); il limite toglie il margine sopra (14vh + 6vh +
+   etichetta) e ne lascia 4vh sotto. L'immagine e' intera e trasparente, quindi si rimpicciolisce e basta */
+.shop__media .ph { max-height: calc(100svh - 24vh - 20px); }
+.shop__info { grid-column: 8 / 13; }
+.shop__word { margin-bottom: 28px; }
+.shop__price { font-size: clamp(24px, 2.4vw, 40px); letter-spacing: -.03em; margin-bottom: 20px; }
+.shop__price del { opacity: .45; margin-right: .3em; }
+.shop__price ins { text-decoration: none; }
+.shop__text { max-width: 44ch; color: var(--muted); }
+.shop__buy { display: flex; gap: 10px; margin: 36px 0 28px; }
+.qty { display: flex; align-items: center; border: 1px solid var(--fg); height: 56px; }
+.qty button { width: 44px; height: 100%; font-size: 18px; }
+.qty button:hover { background: rgba(17, 17, 17, .06); }
+.qty span { min-width: 24px; text-align: center; font-feature-settings: "tnum" 1; }
+.btn {
+	flex: 1; display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 20px;
+	background: var(--fg); color: var(--bg); font-size: 13px; text-transform: uppercase; letter-spacing: .01em;
+	position: relative; isolation: isolate; transition: opacity .3s;
+}
+/* al passaggio si apre un riquadro interno (Liteshop: «inset: 0.4rem») */
+.btn::before {
+	content: ""; position: absolute; inset: 50%; z-index: -1; border-radius: 2px;
+	background: rgba(255, 255, 255, .14); transition: inset .5s var(--ease);
+}
+.btn:hover::before { inset: 5px; }
+.btn.loading { opacity: .5; pointer-events: none; }
+.btn.is-off { opacity: .35; cursor: not-allowed; }
+.added_to_cart { display: none !important; }
+.shop__tags { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); }
+
+/* ---------- Footer ---------- */
+.ftr { padding: 10vh var(--pad) var(--pad); border-top: 1px solid var(--line); overflow: hidden; }
+.ftr__row { row-gap: 16px; }
+.f1 { grid-column: 1 / 5; } .f2 { grid-column: 7 / 9; } .f3 { grid-column: 9 / 11; } .f4 { grid-column: 11 / 13; justify-self: end; }
+.ftr__word { margin-top: 10vh; }
+
+/* ---------- Barra in basso (solo mentre si guarda il prodotto) ---------- */
+.bar {
+	position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+	display: flex; justify-content: space-between; align-items: center;
+	padding: 0 calc(var(--pad) * 2) 14px; color: #FFFFFF; mix-blend-mode: difference; pointer-events: none;
+	opacity: 0; transition: opacity .5s;
+}
+.bar.is-on { opacity: 1; }
+.bar__track { display: inline-block; position: relative; width: 120px; height: 1px; margin: 0 10px; vertical-align: middle; background: rgba(255, 255, 255, .35); }
+.bar__fill { position: absolute; inset: 0; background: #FFFFFF; transform-origin: left center; transform: scaleX(0); }
+[data-progress] { display: inline-block; min-width: 3ch; text-align: right; }
+
+/* ---------- Cassetto del carrello ---------- */
+.drawer { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.drawer__veil { position: absolute; inset: 0; background: rgba(17, 17, 17, .45); opacity: 0; transition: opacity .5s; }
+.drawer__panel {
+	position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 100%);
+	display: flex; flex-direction: column; padding: var(--pad); overflow-y: auto;
+	background: #FFFFFF; color: #111111; transform: translateX(100%); transition: transform .7s var(--ease);
+}
+.drawer.is-open { pointer-events: auto; }
+.drawer.is-open .drawer__veil { opacity: 1; }
+.drawer.is-open .drawer__panel { transform: none; }
+.drawer__head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #DDDDDD; }
+.drawer__content { flex: 1; display: flex; flex-direction: column; }
+.woocommerce-mini-cart { flex: 1; margin: 0; }
+.woocommerce-mini-cart-item {
+	position: relative; display: grid; grid-template-columns: 64px 1fr; column-gap: 14px; align-items: center;
+	padding: 20px 28px 20px 0; border-bottom: 1px solid #DDDDDD; font-size: 13px;
+}
+.woocommerce-mini-cart-item a:not(.remove) { display: contents; font-weight: 700; }
+.woocommerce-mini-cart-item img { grid-row: 1 / 3; width: 64px; height: 64px; object-fit: cover; background: #EEEEEE; }
+.woocommerce-mini-cart-item .quantity { grid-column: 2; color: #666666; }
+.woocommerce-mini-cart-item .remove { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 20px; line-height: 1; color: #666666; }
+.woocommerce-mini-cart__total {
+	display: flex; justify-content: space-between; align-items: baseline; margin: 0; padding: 20px 0;
+	border-top: 1px solid #DDDDDD; font-size: 13px; text-transform: uppercase;
+}
+.woocommerce-mini-cart__total .amount { font-size: 22px; letter-spacing: -.03em; text-transform: none; }
+.woocommerce-mini-cart__buttons { display: flex; flex-direction: column; gap: 8px; margin: 0 0 8px; }
+.woocommerce-mini-cart__buttons .button {
+	display: flex; align-items: center; justify-content: center; height: 52px;
+	font-size: 13px; text-transform: uppercase; letter-spacing: .01em; border: 1px solid #111111;
+}
+.woocommerce-mini-cart__buttons .checkout { background: #111111; color: #FFFFFF; order: -1; }
+.woocommerce-mini-cart__empty-message { padding: 40px 0; color: #666666; }
+
+/* ---------- Manuale (/manual): le tavole scorrono con lo scroll e tornano alla 01, poi i testi (Andrea, 27/09) ---------- */
+.manuale { padding-top: calc(var(--pad) * 2 + 110px); }
+.manuale__testa { padding: 0 var(--pad) 6vh; }
+.manuale__titolo { margin: 24px 0 0; max-width: 24ch; font-size: clamp(28px, 3.6vw, 60px); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; }
+.passi { height: 100vh; height: 100svh; display: flex; align-items: center; overflow: hidden; }
+.passi__nastro { display: flex; align-items: flex-start; gap: 28px; padding: 0 var(--pad); will-change: transform; }
+/* tavole piu' piccole, su grigio chiaro, con l'indicazione sotto (Andrea, 27/09: «immagini troppo grandi», «tornerei allo
+   sfondo chiaro», «le indicazioni devono seguire le immagini») */
+.passo { flex: 0 0 min(40vw, calc((100svh - 330px) * 16 / 9)); margin: 0; }
+.passo__tavola { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; background: #EEEEEE; overflow: hidden; }
+.passo__tavola img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.passo__n { position: absolute; top: 14px; left: 16px; z-index: 1; color: var(--fg); }
+.passo__testo { max-width: 46ch; margin-top: 16px; font-size: 15px; line-height: 1.4; }
+/* la formula del fascicolo sotto il titolo, piccola: grande sembrava il titolo (Andrea, 27/09: «Il titolo è sbagliato») */
+.manuale__formula { max-width: 62ch; margin: 18px 0 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
+/* in fondo una fascia nera su tre colonne, dove la pagina si ferma (Andrea, 27/09: «magari con una fascia nera e un paio di scroll per superare») */
+.manuale__fascia { padding: 14vh var(--pad); }
+.manuale__griglia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: calc(var(--gap) * 3); align-items: start; }
+.manuale__sez { margin: 0 0 40px; }
+.manuale__sez h2 { margin: 0 0 18px; color: var(--muted); }
+.manuale__sez p { margin: 0 0 10px; max-width: 44ch; }
+.manuale__avvertenze { list-style: none; margin: 0; padding: 0; }
+.manuale__avvertenze li { margin: 0 0 10px; }
+@media (max-width: 900px) {
+	.passo { flex-basis: 80vw; }
+	.passo__tavola { border-radius: 14px; }
+	.manuale__griglia { grid-template-columns: 1fr; }
+	.manuale__fascia { padding: 10vh var(--pad); }
+}
+.reduce .passi { height: auto; overflow-x: auto; padding: 4vh 0; }
+
+/* ---------- Pagine interne e WooCommerce ---------- */
+.interna { min-height: 80vh; padding: calc(var(--pad) * 2 + 110px) var(--pad) 14vh; }
+.interna__titolo {
+	font-weight: 700; font-size: clamp(48px, 9vw, 160px); letter-spacing: -.07em; line-height: .84;
+	margin-bottom: 8vh; margin-left: -.03em; text-transform: uppercase;
+}
+.interna__corpo { max-width: 1200px; }
+.pagina-interna .wc-block-components-button:not(.is-link),
+.pagina-interna .wp-element-button,
+.pagina-interna .button {
+	background: #111111 !important; color: #FFFFFF !important; border: 0 !important; border-radius: 0 !important;
+	font-family: inherit !important; font-size: 13px !important; text-transform: uppercase; letter-spacing: .01em; min-height: 52px;
+}
+.pagina-interna input, .pagina-interna select, .pagina-interna textarea,
+.pagina-interna .wc-block-components-text-input input,
+.pagina-interna .wc-blocks-components-select__select { border-radius: 0 !important; border-color: #DDDDDD !important; font-family: inherit; }
+.pagina-interna .wc-block-components-product-name { font-weight: 700; color: inherit; }
+.pagina-interna .wc-block-components-title { font-weight: 700; letter-spacing: -.02em; }
+
+/* ---------- Telefono ---------- */
+@media (max-width: 900px) {
+	.label { font-size: 11px; }
+	.hdr { grid-template-columns: 1fr auto auto; column-gap: 12px; }
+	.hdr__logo { grid-column: 1; font-size: 20px; }
+	.hdr__box { grid-column: 2; width: 40px; height: 40px; }
+	.hdr__nav, .hdr__cta { display: none; }
+	.hdr__menu { display: block; grid-column: 3; }
+
+	.intro__meta { top: calc(var(--pad) + 64px); row-gap: 14px; }
+	.m-clock { grid-column: 1 / 8; } .m-lang { grid-column: 8 / 13; justify-self: end; }
+	.m-b0 { grid-column: 1 / 7; } .m-b1 { grid-column: 7 / 13; } .m-b2 { display: none; }
+	.intro__word { width: calc(100% - 2 * var(--pad)); bottom: auto; top: calc(var(--pad) + 160px); }
+
+	.feat { width: calc(100% - var(--pad) * 2); left: var(--pad); }
+	.feat--b[data-to=""] { width: calc(100% - var(--pad) * 2); left: var(--pad); top: auto; bottom: 14%; }
+	.feat__title { font-size: 40px; }
+	.feat__n { margin-bottom: 30px; }
+
+	.gal__word { grid-column: 1 / 10; } .gal__count { grid-column: 10 / 13; }
+	.gal__grid { row-gap: 7vh; }
+	.g1, .g3, .g5 { grid-column: 1 / 11; margin-top: 0; }
+	.g2, .g4, .g6 { grid-column: 3 / 13; margin-top: 0; }
+
+	.shop__media, .shop__info { grid-column: 1 / 13; }
+	.f1 { grid-column: 1 / 8; } .f2 { grid-column: 8 / 13; justify-self: end; }
+	.f3 { grid-column: 1 / 7; } .f4 { grid-column: 7 / 13; }
+	.bar__tags { display: none; }
+	.bar { justify-content: flex-end; }
+}
+
+/* telefono: il prodotto nella parte alta del riquadro, i testi in una fascia libera sotto (Andrea, 27/09: «sulla modalità
+   telefono i testi finiscono sopra all'oggetto»); fomes.js conta lo scostamento del canvas e impila i blocchi nella fascia */
+@media (max-width: 900px) {
+	.seq__canvas { top: 12%; bottom: auto; height: 54%; }
+	.feat[data-to=""], .feat--b[data-to=""] { top: 70%; bottom: auto; }
+}
+
+/* ---------- Movimento ridotto ---------- */
+.reduce .intro { height: auto; }
+.reduce .intro__sticky { position: relative; height: auto; overflow: visible; padding-top: 100svh; }
+.reduce .intro__word { bottom: auto; top: calc(100svh - var(--pad)); transform: translateY(-100%); }
+.reduce .frame { position: relative; height: 100svh; }
+.reduce .seq__canvas { opacity: 1; }
+.reduce .reel { display: none; }
+.reduce .frame__ui { overflow: auto; }
+.reduce .feat { position: relative; inset: auto; width: auto; opacity: 1; margin: 0 var(--pad) 32px; }
+.reduce .feat:first-of-type { margin-top: 160px; }
+.reduce .film { height: auto; }
+.reduce .film__sticky { position: relative; height: auto; }
+.reduce .film__frame { position: relative; clip-path: none; aspect-ratio: 16 / 9; }
