@@ -625,6 +625,22 @@
 			.fromTo('.film__frame', { clipPath: 'inset(36% 0% 36% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power2.inOut' })
 			.to({}, { duration: 0.4 });
 		const v = $('.film__video');
+		// con lo schermo in verticale il film 9:16 (Andrea, 28/09: «il film formato smartphone c'è da farlo»), e ruotandolo si
+		// scambia; conta la forma dello schermo e non la larghezza: un telefono tenuto in orizzontale vuole il 16:9
+		const verticale = v && v.dataset.telefono && matchMedia('(orientation: portrait)');
+		if (verticale) {
+			const largo = { src: v.getAttribute('src'), poster: v.getAttribute('poster') };
+			const scegli = () => {
+				const f = verticale.matches ? { src: v.dataset.telefono, poster: v.dataset.posterTelefono } : largo;
+				if (v.getAttribute('src') === f.src) return;
+				const andava = !v.paused;
+				v.poster = f.poster;
+				v.src = f.src;
+				if (andava) v.play().catch(() => {});
+			};
+			scegli();
+			verticale.addEventListener('change', scegli);
+		}
 		if (v) new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: 0.15 }).observe(v);
 	}
 
