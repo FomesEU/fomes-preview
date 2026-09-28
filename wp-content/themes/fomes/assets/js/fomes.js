@@ -5,15 +5,14 @@
 	const html = document.documentElement;
 	const $ = (s, r = document) => r.querySelector(s);
 	const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-	const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-	if (reduce) html.classList.add('reduce');
+	// la stessa home animata anche per chi ha ridotto il movimento nel sistema (Andrea, 28/09: «Come per tutti»)
 	const G = window.gsap;
 	if (G) G.registerPlugin(ScrollTrigger, SplitText);
 	const pad = () => parseFloat(getComputedStyle(html).getPropertyValue('--pad')) || 20;
 
 	/* ---------- Scroll morbido e ancore ---------- */
 	let lenis = null;
-	if (!reduce && window.Lenis) {
+	if (window.Lenis) {
 		lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 0.9 });
 		if (G) {
 			lenis.on('scroll', ScrollTrigger.update);
@@ -21,8 +20,10 @@
 			G.ticker.lagSmoothing(0);
 		}
 	}
+	// con l'immagine della galleria ingrandita la pagina dietro resta ferma (il blocco dell'ingrandimento, in fondo al file)
+	document.addEventListener('fomes:ferma-pagina', (e) => { if (lenis) (e.detail ? lenis.stop() : lenis.start()); });
 	const intro = $('.intro');
-	const scrollToY = (y) => lenis ? lenis.scrollTo(y, { duration: 1.6, easing: (t) => 1 - Math.pow(1 - t, 4) }) : scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+	const scrollToY = (y) => lenis ? lenis.scrollTo(y, { duration: 1.6, easing: (t) => 1 - Math.pow(1 - t, 4) }) : scrollTo({ top: y, behavior: 'smooth' });
 	document.addEventListener('click', (e) => {
 		const a = e.target.closest('a[href*="#"]');
 		if (!a) return;
@@ -30,7 +31,7 @@
 		if (url.pathname !== location.pathname || !url.hash) return;
 		let y = null;
 		if (url.hash === '#top') y = 0;
-		else if (url.hash === '#design' && intro && !reduce) y = intro.offsetTop + innerHeight * 2.7; // dove comincia il prodotto
+		else if (url.hash === '#design' && intro) y =intro.offsetTop + innerHeight * 2.7; // dove comincia il prodotto
 		else if ($(url.hash)) y = $(url.hash).getBoundingClientRect().top + scrollY;
 		if (y === null) return;
 		e.preventDefault();
@@ -81,6 +82,11 @@
 	/* ---------- Fotogrammi del prodotto ---------- */
 	const seq = $('.seq__canvas');
 	const N = seq ? (D.frameCount | 0) : 0;
+	// sul telefono una serie piu' leggera (Andrea, 28/09: «ok la riduzione»): un fotogramma ogni PASSO, a risoluzione
+	// piu' bassa; la regia resta sulla numerazione della serie intera e disegna il fotogramma caricato piu' vicino
+	const telefono = !!D.framesTelefono && innerWidth < 900;
+	const PASSO = telefono ? Math.max(1, D.passoTelefono | 0) : 1;
+	const FR_URL = telefono ? D.framesTelefono : D.frames;
 	const frames = [];
 	let current = 0;
 	const FIT = 0.94;
@@ -92,7 +98,7 @@
 		return [w, h];
 	};
 	const draw = (i) => {
-		const img = frames[i];
+		const img = frames[i - (i % PASSO)];
 		if (!seq || !img || !img.naturalWidth) return;
 		const [w, h] = sizeCanvas(seq);
 		const ctx = seq.getContext('2d');
@@ -102,18 +108,19 @@
 	};
 	const loadFrames = (onProgress) => new Promise((resolve) => {
 		if (!N) return resolve();
+		const tot = Math.ceil(N / PASSO);
 		let done = 0;
-		for (let i = 0; i < N; i++) {
+		for (let i = 0; i < N; i += PASSO) {
 			const im = new Image();
 			im.decoding = 'async';
 			im.onload = im.onerror = () => {
 				done++;
-				onProgress(done / N);
-				if (i === current) draw(current);
-				if (done === N) resolve();
+				onProgress(done / tot);
+				if (i === current - (current % PASSO)) draw(current);
+				if (done === tot) resolve();
 			};
-			im.src = `${D.frames}${String(i + 1).padStart(4, '0')}.webp`;
-			frames.push(im);
+			im.src = `${FR_URL}${String(i + 1).padStart(4, '0')}.webp`;
+			frames[i] = im;
 		}
 	});
 
@@ -137,10 +144,10 @@
 	// una spezzata con gli angoli in curva larga (Andrea, 27/09: «riusciamo a fare anche queste direttrici più morbide?
 	// più curvilinee?»): stesso percorso di prima, raggio fino a 70 px e mai oltre meta' dei due tratti; il gradino
 	// orizzontale-verticale-orizzontale diventa una S. Si disegna con la stessa animazione delle linee di prima
-	// raggi: uno per angolo, a partire dal primo (limiti, oltre ai 70 px e a meta' dei tratti)
-	const curva = (g, pts, raggi = []) => {
+	// raggi: uno per angolo, a partire dal primo (limiti, oltre ai 70 px e a meta' dei tratti). Restituisce l'attributo d
+	const tracciato = (pts, raggi = []) => {
 		const p = pts.filter((q, i) => i === 0 || Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) > 0.5);
-		if (p.length < 2) return null;
+		if (p.length < 2) return '';
 		let d = `M${p[0][0]} ${p[0][1]}`;
 		for (let i = 1; i < p.length - 1; i++) {
 			const [a, b, c] = [p[i - 1], p[i], p[i + 1]];
@@ -151,12 +158,15 @@
 			d += ` L${s[0]} ${s[1]} C${(s[0] + b[0]) / 2} ${(s[1] + b[1]) / 2} ${(e[0] + b[0]) / 2} ${(e[1] + b[1]) / 2} ${e[0]} ${e[1]}`;
 		}
 		const z = p[p.length - 1];
-		return mk('path', { d: `${d} L${z[0]} ${z[1]}`, pathLength: 1, 'stroke-dasharray': 1, 'stroke-dashoffset': 1 }, g);
+		return `${d} L${z[0]} ${z[1]}`;
 	};
 	const layoutLeaders = () => {
 		if (!leaders || !A || !seq || !seq.clientWidth) return;
-		// misure del riquadro delle direttrici (tutto il riquadro: sul telefono il prodotto ne occupa solo la parte alta)
-		const rr = leaders.getBoundingClientRect(), W = rr.width || seq.clientWidth, H = rr.height || seq.clientHeight, mobile = innerWidth < 900;
+		// misure del riquadro delle direttrici (tutto il riquadro: sul telefono il prodotto ne occupa solo la parte alta).
+		// Misure di layout, che non vedono la scala di GSAP: in cima alla pagina il riquadro e' ancora rimpicciolito, e un
+		// ridimensionamento fatto li' spostava blocchi e linee (28/09); i rettangoli a schermo si dividono per la scala
+		const ui = leaders.parentElement, rr = leaders.getBoundingClientRect();
+		const W = ui.offsetWidth || seq.clientWidth, H = ui.offsetHeight || seq.clientHeight, scala = rr.width / W || 1, mobile = innerWidth < 900;
 		const pila = {};   // sul telefono i blocchi che escono insieme (stessa fase e stesso gruppo) si impilano nella fascia
 		leaders.setAttribute('viewBox', `0 0 ${W} ${H}`);
 		$$('.feat').forEach((el) => {
@@ -165,7 +175,18 @@
 			const to = (el.dataset.to || '').split(',').filter((k) => set[k]);
 			if (!el._g) el._g = mk('g', { opacity: 0 }, leaders);
 			const g = el._g;
-			while (g.firstChild) g.removeChild(g.firstChild);
+			// linee e punti si creano una volta sola e poi cambiano solo le coordinate: la regia continua ad animare gli
+			// stessi elementi (prima si ricreavano a ogni ridimensionamento, e le linee nuove restavano invisibili)
+			const linee = el._linee || (el._linee = []), punti = el._punti || (el._punti = []);
+			let n = 0;
+			const segna = (pts, raggi, [px, py]) => {
+				if (!linee[n]) linee[n] = mk('path', { pathLength: 1, 'stroke-dasharray': 1, 'stroke-dashoffset': 1 }, g);
+				if (!punti[n]) punti[n] = mk('circle', { r: 2.5 }, g);
+				linee[n].setAttribute('d', tracciato(pts, raggi));
+				punti[n].setAttribute('cx', px);
+				punti[n].setAttribute('cy', py);
+				n++;
+			};
 			if (!to.length) return;
 			const lato = mobile ? 'l' : (el.classList.contains('feat--b') ? 'r' : 'l');
 			const pts = to.map((k) => toScreen(set[k][lato]));
@@ -192,8 +213,7 @@
 				const xc = sotto ? Math.min(W - x0, Math.max(...xs) + 34) : Math.max(x0, Math.min(...xs) - 34);
 				to.forEach((k) => {
 					const [px, py] = toScreen(set[k][lt]);
-					curva(g, [[x0, top - 10], [xc, top - 10], [xc, py], [px, py]]);
-					mk('circle', { cx: px, cy: py, r: 2.5 }, g);
+					segna([[x0, top - 10], [xc, top - 10], [xc, py], [px, py]], [], [px, py]);
 				});
 			} else if (lato === 'l') {
 				// dal blocco a una colonna subito a destra del testo, e dalla colonna a ogni pezzo in orizzontale:
@@ -207,17 +227,19 @@
 				const xc = Math.min(x0 + larg + 16, minX - 24);
 				// il primo angolo, dove la linea lascia il blocco verso la colonna, non entra nel testo: il suo raggio
 				// si ferma 6 px dopo le lettere vere del blocco (a raggio pieno la curva tagliava la fine del titolo)
-				const rs = leaders.getBoundingClientRect();
-				const fine = Math.max(x0, ...$$('.feat__n, .feat__title, .feat__text', el).map((t) => {
-					const r = document.createRange();
-					r.selectNodeContents(t);
-					const b = r.getBoundingClientRect();
-					return b.width ? b.right - rs.left : x0;
+				// (sui soli nodi di testo: dopo SplitText il titolo e' fatto di righe larghe quanto il blocco)
+				const fine = Math.max(x0, ...$$('.feat__n, .feat__title, .feat__text', el).flatMap((t) => {
+					const giro = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), destre = [];
+					for (let nodo = giro.nextNode(); nodo; nodo = giro.nextNode()) {
+						const r = document.createRange();
+						r.selectNodeContents(nodo);
+						for (const b of r.getClientRects()) if (b.width) destre.push((b.right - rr.left) / scala);
+					}
+					return destre;
 				}));
 				// un tracciato per pezzo: blocco -> colonna -> ramo orizzontale fino al punto
 				pts.forEach(([px, py]) => {
-					curva(g, [[x0, yL], [xc, yL], [xc, py], [px, py]], [py > yL ? xc - fine - 6 : Infinity]);   // verso l'alto il testo e' sotto
-					mk('circle', { cx: px, cy: py, r: 2.5 }, g);
+					segna([[x0, yL], [xc, yL], [xc, py], [px, py]], [py > yL ? xc - fine - 6 : Infinity], [px, py]);   // verso l'alto il testo e' sotto
 				});
 			} else {
 				const x1 = W * 0.93;
@@ -225,8 +247,7 @@
 				el.style.left = `${left}px`;
 				el.style.width = `${x1 - left}px`;
 				pts.forEach(([px, py], i) => {
-					curva(g, i === 0 ? [[x1, yL], [px, yL], [px, py]] : [[x1, yL], [x1, py], [px, py]]);
-					mk('circle', { cx: px, cy: py, r: 2.5 }, g);
+					segna(i === 0 ? [[x1, yL], [px, yL], [px, py]] : [[x1, yL], [x1, py], [px, py]], [], [px, py]);
 				});
 			}
 		});
@@ -469,7 +490,7 @@
 			pause() { running = false; cancelAnimationFrame(raf); },
 		};
 	};
-	const reel = reelCanvas && !reduce ? Reel(reelCanvas, D.reel || []) : null;
+	const reel = reelCanvas ? Reel(reelCanvas, D.reel || []) : null;
 
 	/* ---------- Preloader ---------- */
 	const pre = $('.preloader');
@@ -489,10 +510,7 @@
 	});
 	addEventListener('resize', () => { sizeWords(); draw(current); layoutLeaders(); });
 
-	if (!G || reduce) {
-		if (reduce && N) setTimeout(() => { current = Math.floor(N / 3); draw(current); }, 0);
-		return;
-	}
+	if (!G) return;
 
 	/* ---------- Ingresso ---------- */
 	function introIn() {
@@ -699,16 +717,23 @@
 	});
 })();
 
-/* Galleria: immagine ingrandita al clic (anche col movimento ridotto, senza animazione) */
+/* Galleria: immagine ingrandita al clic. Il riquadro sta fuori dalla galleria (footer.php): GSAP la blocca con un
+   transform, e dentro un antenato con transform il position: fixed si misura su di lui e non sullo schermo (28/09:
+   riquadro alto quanto la galleria, «Close» fuori schermo). Mentre e' aperto la pagina dietro resta ferma */
 (() => {
 	const lb = document.querySelector('.lb');
 	if (!lb) return;
 	const img = lb.querySelector('.lb__img');
-	const G = matchMedia('(prefers-reduced-motion: reduce)').matches ? null : window.gsap;
+	const G = window.gsap;
+	const ferma = (si) => {
+		document.documentElement.classList.toggle('lb-aperta', si);
+		document.dispatchEvent(new CustomEvent('fomes:ferma-pagina', { detail: si }));
+	};
 	const apri = (src) => {
 		img.src = src;
 		lb.classList.add('is-open');
 		lb.setAttribute('aria-hidden', 'false');
+		ferma(true);
 		if (G) {
 			G.fromTo(lb, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' });
 			G.fromTo(img, { scale: 0.94, clipPath: 'inset(8% 8% 8% 8%)' }, { scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.9, ease: 'expo.out' });
@@ -719,7 +744,7 @@
 	};
 	const chiudi = () => {
 		if (!lb.classList.contains('is-open')) return;
-		const fine = () => { lb.classList.remove('is-open'); lb.setAttribute('aria-hidden', 'true'); lb.style.opacity = ''; };
+		const fine = () => { lb.classList.remove('is-open'); lb.setAttribute('aria-hidden', 'true'); lb.style.opacity = ''; ferma(false); };
 		if (G) G.to(lb, { opacity: 0, duration: 0.3, ease: 'power2.out', onComplete: fine });
 		else fine();
 	};
@@ -748,3 +773,29 @@
 	document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 	if (window.jQuery) jQuery(document.body).on('added_to_cart', open);
 })();
+
+/* Il numero del carrello nell'intestazione segue i blocchi Carrello e Pagamento: cambiano il carrello senza i
+   frammenti di WooCommerce (28/09: dopo il «+» nel carrello l'intestazione restava indietro). A ogni cambio si
+   aggiornano il numero e, coi frammenti, il carrello a scomparsa */
+addEventListener('load', () => {
+	const d = window.wp && window.wp.data;
+	if (!d || !d.select('wc/store/cart')) return;
+	let visto = null;
+	d.subscribe(() => {
+		const negozio = d.select('wc/store/cart');
+		if (!negozio.hasFinishedResolution('getCartData')) return;
+		const n = negozio.getCartData().itemsCount;
+		if (n === visto) return;
+		const primo = visto === null;
+		visto = n;
+		document.querySelectorAll('.fomes-cart-count').forEach((e) => { e.textContent = n; });
+		if (!primo && window.jQuery) jQuery(document.body).trigger('wc_fragment_refresh');
+	});
+});
+
+/* Pagamento: il primo clic su «Place order» (28/09). Quando un campo perde il fuoco, WooCommerce salva subito
+   l'indirizzo e intanto disabilita il bottone: la pressione sul bottone toglieva il fuoco al campo, e il clic
+   arrivava su un bottone gia' disabilitato. Il campo tiene il fuoco; l'indirizzo parte comunque con l'ordine */
+document.addEventListener('mousedown', (e) => {
+	if (e.button === 0 && e.target.closest('.wc-block-components-checkout-place-order-button')) e.preventDefault();
+}, true);

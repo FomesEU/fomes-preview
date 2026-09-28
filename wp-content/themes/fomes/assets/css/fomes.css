@@ -96,6 +96,7 @@ img { max-width: 100%; display: block; }
 .lb.is-open { visibility: visible; }
 .lb__img { max-width: calc(100vw - 2 * var(--pad)); max-height: calc(100svh - 120px); width: auto; height: auto; object-fit: contain; cursor: zoom-out; }
 .lb__close { position: absolute; top: var(--pad); right: var(--pad); }
+html.lb-aperta { overflow: clip; }   /* con l'immagine aperta la pagina dietro non scorre */
 .shop .ph.has-img { background: none; }
 .shop .ph.has-img .ph__img { object-fit: contain; top: 0; height: 100%; }   /* shop: intero, senza parallasse (Andrea, 27/09: «risulta tagliato l'oggetto») */
 
@@ -106,7 +107,8 @@ img { max-width: 100%; display: block; }
 	aspect-ratio: var(--r, 4/5); max-height: calc(100svh - 180px); padding: 18px; background: #111111; color: #FFFFFF; overflow: hidden;   /* sta nello schermo (Andrea, 27/09: «ora viene tagliato in parte») */
 }
 .tile__title { font-weight: 700; font-size: clamp(32px, 3.6vw, 64px); letter-spacing: -.05em; line-height: .92; text-transform: uppercase; }
-.tile__arrow { position: absolute; right: 18px; bottom: 14px; font-size: clamp(32px, 3.6vw, 64px); line-height: 1; transition: transform .5s var(--ease); }
+/* la freccia in alto a destra, accanto a «[ /manual ]»: in basso copriva la fine del titolo (Andrea, 28/09) */
+.tile__arrow { position: absolute; right: 18px; top: 12px; font-size: clamp(32px, 3.6vw, 64px); line-height: 1; transition: transform .5s var(--ease); }
 .tile:hover .tile__arrow { transform: translateX(10px); }
 .tile > .label { display: block; margin-top: 10px; }
 
@@ -296,7 +298,7 @@ img { max-width: 100%; display: block; }
 	padding: 20px 28px 20px 0; border-bottom: 1px solid #DDDDDD; font-size: 13px;
 }
 .woocommerce-mini-cart-item a:not(.remove) { display: contents; font-weight: 700; }
-.woocommerce-mini-cart-item img { grid-row: 1 / 3; width: 64px; height: 64px; object-fit: cover; background: #EEEEEE; }
+.woocommerce-mini-cart-item img { grid-row: 1 / 3; width: 64px; height: 64px; object-fit: contain; background: #EEEEEE; }   /* la foto e' 4:5: intera */
 .woocommerce-mini-cart-item .quantity { grid-column: 2; color: #666666; }
 .woocommerce-mini-cart-item .remove { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 20px; line-height: 1; color: #666666; }
 .woocommerce-mini-cart__total {
@@ -341,7 +343,6 @@ img { max-width: 100%; display: block; }
 	.manuale__griglia { grid-template-columns: 1fr; }
 	.manuale__fascia { padding: 10vh var(--pad); }
 }
-.reduce .passi { height: auto; overflow-x: auto; padding: 4vh 0; }
 
 /* ---------- Pagine interne e WooCommerce ---------- */
 .interna { min-height: 80vh; padding: calc(var(--pad) * 2 + 110px) var(--pad) 14vh; }
@@ -399,17 +400,3 @@ img { max-width: 100%; display: block; }
 	.seq__canvas { top: 12%; bottom: auto; height: 54%; }
 	.feat[data-to=""], .feat--b[data-to=""] { top: 70%; bottom: auto; }
 }
-
-/* ---------- Movimento ridotto ---------- */
-.reduce .intro { height: auto; }
-.reduce .intro__sticky { position: relative; height: auto; overflow: visible; padding-top: 100svh; }
-.reduce .intro__word { bottom: auto; top: calc(100svh - var(--pad)); transform: translateY(-100%); }
-.reduce .frame { position: relative; height: 100svh; }
-.reduce .seq__canvas { opacity: 1; }
-.reduce .reel { display: none; }
-.reduce .frame__ui { overflow: auto; }
-.reduce .feat { position: relative; inset: auto; width: auto; opacity: 1; margin: 0 var(--pad) 32px; }
-.reduce .feat:first-of-type { margin-top: 160px; }
-.reduce .film { height: auto; }
-.reduce .film__sticky { position: relative; height: auto; }
-.reduce .film__frame { position: relative; clip-path: none; aspect-ratio: 16 / 9; }

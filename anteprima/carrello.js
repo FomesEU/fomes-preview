@@ -182,29 +182,8 @@
 	const qui = location.pathname.replace(D.base, '');
 	if (qui === '/checkout/' && !S.qty) location.replace(D.base + '/cart/');
 
-	/* ---------- Scheda prodotto: il modulo «Add to cart» (senza JavaScript di WooCommerce) ---------- */
-	const AVVISO = 'fomes-anteprima-avviso';
-	document.addEventListener('submit', (e) => {
-		const f = e.target;
-		if (f.matches('form.cart')) {
-			e.preventDefault();
-			const q = Math.max(1, Number((f.querySelector('[name="quantity"]') || {}).value) || 1);
-			S.qty += q;
-			salva();
-			try { sessionStorage.setItem(AVVISO, String(q)); } catch { /* niente avviso */ }
-			location.reload();
-		} else if (f.matches('#commentform')) {
-			e.preventDefault(); // le recensioni non si salvano: non c'è un server
-		}
-	}, true);
+	/* La scheda prodotto non c'è: rimanda allo shop della home (Esporta-Anteprima.mjs), come sul sito */
 	document.addEventListener('DOMContentLoaded', () => {
-		let q = null;
-		try { q = sessionStorage.getItem(AVVISO); sessionStorage.removeItem(AVVISO); } catch { /* niente */ }
-		const box = document.querySelector('.woocommerce-notices-wrapper');
-		if (q && box) {
-			const cosa = Number(q) > 1 ? `${q} &times; &ldquo;${D.nome}&rdquo; have` : `&ldquo;${D.nome}&rdquo; has`;
-			box.innerHTML = `\n\t<div class="woocommerce-message" role="alert" tabindex="-1">\n\t\t${cosa} been added to your cart. <a href="${D.base}/cart/" class="button wc-forward">View cart</a>\t</div>\n`;
-		}
 		if (qui.startsWith('/checkout/order-received/')) ricevuta();
 	});
 
